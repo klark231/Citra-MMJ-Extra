@@ -23,12 +23,19 @@ jobs:
           for d in externals/cubeb externals/enet externals/dynarmic externals/teakra; do
             [ -d "$d/.git" ] && git -C "$d" submodule update --init --recursive --depth 1 || true
           done
-          # Replace the boost superproject with a real release (has boost/version.hpp)
           rm -rf externals/boost
           curl -fL https://archives.boost.io/release/1.83.0/source/boost_1_83_0.tar.gz | tar xz
           mv boost_1_83_0 externals/boost
           test -f externals/boost/boost/version.hpp
-          ls externals
+
+      - name: Patch build files
+        run: |
+          # Add Citra's fmt before dynarmic, drop the old alias line
+          sed -i '/^# libfmt/d; /^add_subdirectory(fmt)/d; /^add_library(fmt::fmt ALIAS fmt)/d' externals/CMakeLists.txt
+          sed -i '1i add_subdirectory(fmt)' externals/CMakeLists.txt
+          # Stop dynarmic from defining a second fmt target
+          echo "# disabled in CI" > externals/dynarmic/externals/fmt/CMakeLists.txt
+          head -5 externals/CMakeLists.txt
 
       - name: Read Gradle version
         run: |
@@ -47,6 +54,8 @@ jobs:
 
       - name: Build release APK
         working-directory: src/android
+        env:
+          CI: "0"
         run: |
           set -o pipefail
           gradle assembleRelease --no-daemon 2>&1 | tee ../../build.log
