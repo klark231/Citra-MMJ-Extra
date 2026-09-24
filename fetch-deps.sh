@@ -21,6 +21,7 @@ fetch externals/catch         https://github.com/catchorg/Catch2.git
 fetch externals/dynarmic      https://github.com/azahar-emu/dynarmic.git
 fetch externals/xbyak         https://github.com/herumi/xbyak.git
 fetch externals/cryptopp/cryptopp https://github.com/weidai11/cryptopp.git
+(cd externals/cryptopp/cryptopp && git fetch -q --depth 1 origin tag CRYPTOPP_8_2_0 && git checkout -q CRYPTOPP_8_2_0)
 fetch externals/fmt           https://github.com/fmtlib/fmt.git
 fetch externals/enet          https://github.com/lsalzman/enet.git
 fetch externals/inih/inih     https://github.com/benhoyt/inih.git
