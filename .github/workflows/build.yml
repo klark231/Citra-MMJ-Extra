@@ -19,20 +19,25 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Free disk space
+      - name: Read Gradle version
         run: |
-          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost
+          V=$(grep distributionUrl src/android/gradle/wrapper/gradle-wrapper.properties | sed -E 's/.*gradle-([0-9.]+)-.*/\1/')
+          echo "GRADLE_VERSION=$V" >> "$GITHUB_ENV"
+          echo "Using Gradle $V"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+
+      - name: Free disk space
+        run: sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost
 
       - name: Accept SDK licenses
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
 
       - name: Build release APK
-        run: |
-          GRADLEW=$(find . -name gradlew -not -path "*/node_modules/*" | head -1)
-          [ -n "$GRADLEW" ] || { echo "No gradlew found"; exit 1; }
-          cd "$(dirname "$GRADLEW")"
-          chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon --stacktrace
+        working-directory: src/android
+        run: gradle assembleRelease --no-daemon --stacktrace
 
       - name: Sign APK (throwaway CI key)
         run: |
@@ -40,7 +45,7 @@ jobs:
             -validity 10000 -storepass android -keypass android -dname "CN=CI"
           APKSIGNER=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)/apksigner
           mkdir -p out
-          find . -path "*release*" -name "*.apk" -not -path "./out/*" | while read -r f; do
+          find src/android -path "*release*" -name "*.apk" | while read -r f; do
             "$APKSIGNER" sign --ks ci.jks --ks-pass pass:android \
               --out "out/$(basename "${f%.apk}")-signed.apk" "$f"
           done
