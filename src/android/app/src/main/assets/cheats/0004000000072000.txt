@@ -1,0 +1,7 @@
+* Fire Emblem: Awakening
+
+[60 FPS]
+204BAEFC 00000001
+
+[30 FPS]
+204BAEFC 00000002

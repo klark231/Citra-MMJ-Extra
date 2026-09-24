@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="OverflowMenu" parent="Widget.AppCompat.PopupMenu.Overflow">
+        <item name="overlapAnchor">false</item>
+        <item name="android:dropDownVerticalOffset">4dp</item>
+    </style>
+
+    <style name="ModalBottomSheet" parent="Widget.MaterialComponents.BottomSheet.Modal">
+        <item name="android:maxWidth">-1px</item> <!-- match_parent -->
+    </style>
+
+    <style name="BottomSheetMenu" parent="ThemeOverlay.MaterialComponents.BottomSheetDialog">
+        <item name="android:colorControlHighlight">@color/citra_highlight</item>
+        <item name="bottomSheetStyle">@style/ModalBottomSheet</item>
+    </style>
+
+    <style name="AlertDialog.Button" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textColor">@color/citra_accent</item>
+    </style>
+
+    <!-- Inherit from the material theme -->
+    <style name="CitraTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:textColor">@color/foreground_color</item>
+        <item name="colorPrimary">@color/citra_orange</item>
+        <item name="colorPrimaryDark">@color/citra_orange</item>
+        <item name="colorAccent">@color/citra_accent</item>
+        <item name="colorSurface">@color/background_color</item>
+        <item name="android:colorControlHighlight">@color/citra_highlight</item>
+        <item name="actionOverflowMenuStyle">@style/OverflowMenu</item>
+        <item name="bottomSheetDialogTheme">@style/BottomSheetMenu</item>
+        <item name="android:buttonBarButtonStyle">@style/AlertDialog.Button</item>
+    </style>
+
+    <style name="CitraTheme.Button" parent="Widget.AppCompat.Button.Colored">
+        <item name="android:textColor">@color/citra_accent_white</item>
+    </style>
+
+    <style name="CitraTheme.Borderless" parent="Widget.AppCompat.Button.Borderless" />
+
+    <style name="CitraTheme.Caption" parent="TextAppearance.AppCompat.Caption" />
+
+    <style name="EmulationTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:textColor">@color/foreground_color</item>
+        <item name="colorPrimary">@color/citra_orange</item>
+        <item name="colorPrimaryDark">@color/citra_orange</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:colorControlHighlight">#00DDAA</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <item name="android:buttonBarButtonStyle">@style/AlertDialog.Button</item>
+    </style>
+
+    <style name="NNF_BaseTheme" parent="Theme.AppCompat.DayNight.DialogWhenLarge">
+        <!-- You can override this in your sub theme -->
+        <item name="nnf_toolbarTheme">@style/ThemeOverlay.AppCompat.ActionBar</item>
+        <item name="nnf_separator_color">@color/nnf_light_separator_color</item>
+        <item name="nnf_save_icon_color">@color/nnf_icon_tint_color</item>
+        <item name="nnf_dir_icon_color">@color/nnf_icon_tint_color</item>
+
+        <!-- These are important. Handled by toolbar. -->
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="FilePickerTheme" parent="NNF_BaseTheme">
+        <item name="colorPrimary">@color/citra_orange</item>
+        <item name="colorPrimaryDark">@color/citra_orange</item>
+        <item name="colorAccent">@color/citra_accent</item>
+
+        <!--&lt;!&ndash; Setting a divider is entirely optional &ndash;&gt;-->
+        <item name="nnf_list_item_divider">@drawable/line_divider</item>
+
+        <!-- Need to set this also to style create folder dialog -->
+        <item name="alertDialogTheme">@style/FilePickerAlertDialogTheme</item>
+
+        <!-- If you want to set a specific toolbar theme, do it here -->
+
+        <item name="nnf_toolbarTheme">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
+    </style>
+
+    <style name="FilePickerAlertDialogTheme" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="colorPrimary">@color/citra_orange</item>
+        <item name="colorPrimaryDark">@color/citra_orange</item>
+        <item name="colorAccent">@color/citra_accent</item>
+    </style>
+
+</resources>

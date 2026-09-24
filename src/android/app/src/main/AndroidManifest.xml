@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.gamepad"
+        android:required="false" />
+    <uses-feature android:glEsVersion="0x00030001" />
+
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
+
+    <supports-screens
+        android:largeScreens="true"
+        android:normalScreens="true"
+        android:smallScreens="true"
+        android:xlargeScreens="true" />
+
+    <application
+        android:banner="@mipmap/ic_citra"
+        android:hardwareAccelerated="true"
+        android:icon="@mipmap/ic_citra"
+        android:appCategory="game"
+        android:hasFragileUserData="true"
+        android:isGame="true"
+        android:label="Citra">
+        <meta-data
+            android:name="android.max_aspect"
+            android:value="2.4" />
+        <activity
+            android:name=".ui.MainActivity"
+            android:launchMode="singleTop"
+            android:theme="@style/CitraTheme"
+            android:exported="true">
+
+            <!-- This intentfilter marks this Activity as the one that gets launched from Home screen. -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity>
+        <activity
+            android:name=".ui.GameFilePickerActivity"
+            android:label="@string/app_name"
+            android:theme="@style/FilePickerTheme"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.GET_CONTENT" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".ui.EmulationActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"
+            android:launchMode="singleTop"
+            android:exported="true"
+            android:theme="@style/EmulationTheme" />
+        <activity
+            android:name=".settings.SettingsActivity"
+            android:configChanges="orientation|screenSize"
+            android:label="@string/preferences_settings"
+            android:launchMode="singleTop"
+            android:exported="true"
+            android:theme="@style/CitraTheme" />
+        <activity
+            android:name=".ui.ComboKeyActivity"
+            android:configChanges="orientation|screenSize"
+            android:label="@string/combo_key_settings"
+            android:launchMode="singleTop"
+            android:exported="false"
+            android:theme="@style/CitraTheme" />
+        <activity
+            android:name=".ui.EditorActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:label="@string/app_name"
+            android:exported="false"
+            android:screenOrientation="behind"
+            android:theme="@style/CitraTheme"
+            android:windowSoftInputMode="adjustUnspecified|stateHidden" />
+        <activity
+            android:name=".ui.MemoryActivity"
+            android:label="@string/emulation_memory_viewer"
+            android:exported="false"
+            android:screenOrientation="behind"
+            android:theme="@style/CitraTheme" />
+        <activity
+            android:name=".ui.AboutActivity"
+            android:label="@string/about"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+            android:exported="true"
+            android:theme="@style/CitraTheme" />
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.filesprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/nnf_provider_paths" />
+        </provider>
+        <provider
+            android:name=".UserPathProvider"
+            android:authorities="${applicationId}.userpathprovider"
+            android:exported="true"
+            android:grantUriPermissions="true"
+            android:permission="android.permission.MANAGE_DOCUMENTS">
+            <intent-filter>
+                <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
+            </intent-filter>
+        </provider>
+    </application>
+
+</manifest>

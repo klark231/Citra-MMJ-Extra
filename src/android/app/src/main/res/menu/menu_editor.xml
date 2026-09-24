@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/menu_settings_core"
+        android:title="@string/preferences_settings"
+        android:icon="@drawable/ic_memory"
+        app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/menu_manage_cheats"
+        android:title="@string/menu_manage_cheats"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/menu_open_archive"
+        android:title="@string/open_app_archive"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/menu_delete_sdmc"
+        android:title="@string/delete_app_sdmc"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/menu_delete_shader_cache"
+        android:title="@string/delete_shader_cache"
+        app:showAsAction="never"/>
+
+</menu>
