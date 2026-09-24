@@ -251,3 +251,13 @@ if(ANDROID)
     android_ndk_import_module_cpufeatures()
     target_link_libraries(cryptopp PRIVATE cpufeatures)
 endif()
+
+# CI patch: ARMv8 crypto flags for SIMD sources
+if (CRYPTOPP_HAS_ARMV8_CRYPTO)
+    foreach(f gcm_simd rijndael_simd sha_simd crc_simd neon_simd aria_simd
+              blake2b_simd chacha_simd lea_simd simon128_simd speck128_simd
+              sm4_simd simeck_simd)
+        set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/cryptopp/${f}.cpp
+            PROPERTIES COMPILE_FLAGS "-march=armv8-a+crc+crypto")
+    endforeach()
+endif()
