@@ -23,9 +23,6 @@ jobs:
       - name: Fetch dependencies
         run: |
           bash fetch-deps.sh
-          git -C externals/teakra fetch -q --unshallow || true
-          git -C externals/teakra checkout -q "$(git -C externals/teakra rev-list -n1 --before=2022-01-01 origin/HEAD)"
-          echo "teakra pinned at $(git -C externals/teakra rev-parse --short HEAD)"
           for d in externals/cubeb externals/enet externals/dynarmic externals/teakra; do
             [ -d "$d/.git" ] && git -C "$d" submodule update --init --recursive --depth 1 || true
           done
@@ -44,12 +41,14 @@ jobs:
 
       - name: Patch build files
         run: |
-          # --- cryptopp naming ---
+          # --- cryptopp naming: newer master uses crc_simd.cpp, CMakeLists expects crc-simd.cpp ---
           cd externals/cryptopp
           if ls cryptopp/*_simd.cpp >/dev/null 2>&1 && ! ls cryptopp/*-simd.cpp >/dev/null 2>&1; then
             echo ">>> Detected underscore naming, patching cryptopp CMakeLists.txt"
             sed -i 's/-simd\.cpp/_simd.cpp/g' CMakeLists.txt
           fi
+          echo "--- cryptopp crc refs ---"
+          grep -i "crc" CMakeLists.txt | head -10
           cd ../..
 
           # --- fmt / dynarmic conflict ---
@@ -62,20 +61,13 @@ jobs:
           sed -i 's/^install(TARGETS dynarmic EXPORT dynarmicTargets)/##&/' externals/dynarmic/CMakeLists.txt
 
           # --- SoundTouch include path fix ---
-          sed -i '/^target_include_directories(SoundTouch PUBLIC/,/^\s*)/d' externals/soundtouch/CMakeLists.txt
-          echo 'target_include_directories(SoundTouch PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)' >> externals/soundtouch/CMakeLists.txt
+          sed -i 's|target_include_directories(SoundTouch INTERFACE \(.*\))|target_include_directories(SoundTouch INTERFACE $<BUILD_INTERFACE:\1>)|' externals/soundtouch/CMakeLists.txt
 
-      - name: Fix oaknut include for dynarmic
-        run: |
-          OAK=externals/dynarmic/externals/oaknut
-          if [ ! -f "$OAK/include/oaknut/code_block.hpp" ]; then
-            echo ">>> oaknut missing/incomplete, cloning fresh"
-            rm -rf "$OAK"
-            git clone --depth 1 https://github.com/merryhime/oaknut.git "$OAK"
-          fi
-          echo "--- oaknut headers ---"
-          ls "$OAK/include/oaknut/" | head
-          echo "CPATH=$(pwd)/$OAK/include" >> "$GITHUB_ENV"
+          # --- sanity check ---
+          echo "--- dynarmic install lines after patch ---"
+          grep -n 'install' externals/dynarmic/CMakeLists.txt | head -10
+          echo "--- soundtouch include line ---"
+          grep -n 'target_include_directories(SoundTouch' externals/soundtouch/CMakeLists.txt
 
       - name: Read Gradle version
         run: |

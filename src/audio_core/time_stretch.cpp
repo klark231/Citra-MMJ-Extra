@@ -6,6 +6,7 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <vector>
 #include <SoundTouch.h>
 #include "audio_core/audio_types.h"
 #include "audio_core/time_stretch.h"
@@ -64,8 +65,18 @@ std::size_t TimeStretcher::Process(const s16* in, std::size_t num_in, s16* out,
     LOG_TRACE(Audio, "{:5}/{:5} ratio:{:0.6f} backlog:{:0.6f}", num_in, num_out, stretch_ratio,
               backlog_fullness);
 
-    sound_touch->putSamples(in, static_cast<u32>(num_in));
-    return sound_touch->receiveSamples(out, static_cast<u32>(num_out));
+    std::vector<float> in_f(num_in * 2);
+    for (std::size_t i = 0; i < num_in * 2; i++) {
+        in_f[i] = static_cast<float>(in[i]) / 32768.0f;
+    }
+    sound_touch->putSamples(in_f.data(), static_cast<u32>(num_in));
+
+    std::vector<float> out_f(num_out * 2);
+    const u32 received = sound_touch->receiveSamples(out_f.data(), static_cast<u32>(num_out));
+    for (std::size_t i = 0; i < static_cast<std::size_t>(received) * 2; i++) {
+        out[i] = static_cast<s16>(std::clamp(out_f[i] * 32768.0f, -32768.0f, 32767.0f));
+    }
+    return received;
 }
 
 void TimeStretcher::Clear() {
