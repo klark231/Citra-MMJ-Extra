@@ -45,19 +45,18 @@ jobs:
           sed -i '1i add_subdirectory(fmt)' externals/CMakeLists.txt
           echo "# disabled in CI" > externals/dynarmic/externals/fmt/CMakeLists.txt
 
-          # Disable dynarmic's install/export (fmt isn't in its export set)
-          sed -i 's/^install(EXPORT/##install(EXPORT/' externals/dynarmic/CMakeLists.txt
-          sed -i 's/^install(TARGETS dynarmic/##install(TARGETS dynarmic/' externals/dynarmic/CMakeLists.txt
+          # --- Remove dynarmic install/export (multi-line block) ---
+          sed -i '/^install(EXPORT dynarmicTargets/,/^)/d' externals/dynarmic/CMakeLists.txt
+          sed -i 's/^install(TARGETS dynarmic EXPORT dynarmicTargets)/##&/' externals/dynarmic/CMakeLists.txt
 
           # --- SoundTouch include path fix ---
           sed -i 's|target_include_directories(SoundTouch INTERFACE \(.*\))|target_include_directories(SoundTouch INTERFACE $<BUILD_INTERFACE:\1>)|' externals/soundtouch/CMakeLists.txt
 
           # --- sanity check ---
-          head -5 externals/CMakeLists.txt
-          echo "--- dynarmic install lines ---"
-          grep -n '^##install\|^install' externals/dynarmic/CMakeLists.txt | head -10
+          echo "--- dynarmic install lines after patch ---"
+          grep -n 'install' externals/dynarmic/CMakeLists.txt | head -10
           echo "--- soundtouch include line ---"
-          grep -n 'target_include_directories' externals/soundtouch/CMakeLists.txt
+          grep -n 'target_include_directories(SoundTouch' externals/soundtouch/CMakeLists.txt
 
       - name: Read Gradle version
         run: |
