@@ -1,0 +1,52 @@
+name: Android Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost
+
+      - name: Accept SDK licenses
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+
+      - name: Build release APK
+        run: |
+          GRADLEW=$(find . -name gradlew -not -path "*/node_modules/*" | head -1)
+          [ -n "$GRADLEW" ] || { echo "No gradlew found"; exit 1; }
+          cd "$(dirname "$GRADLEW")"
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Sign APK (throwaway CI key)
+        run: |
+          keytool -genkeypair -keystore ci.jks -alias ci -keyalg RSA -keysize 2048 \
+            -validity 10000 -storepass android -keypass android -dname "CN=CI"
+          APKSIGNER=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)/apksigner
+          mkdir -p out
+          find . -path "*release*" -name "*.apk" -not -path "./out/*" | while read -r f; do
+            "$APKSIGNER" sign --ks ci.jks --ks-pass pass:android \
+              --out "out/$(basename "${f%.apk}")-signed.apk" "$f"
+          done
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: out/*.apk
