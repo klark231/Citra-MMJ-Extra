@@ -31,27 +31,20 @@ jobs:
           mv boost_1_83_0 externals/boost
           test -f externals/boost/boost/version.hpp
 
-      - name: Fix cryptopp submodule
+      - name: Fix cryptopp filename mismatch
         run: |
-          cd externals/cryptopp/cryptopp
-          echo "=== Before: $(git rev-parse --short HEAD) ==="
-          ls | grep -i crc || echo "(no crc files yet)"
-          # Citra MMJ expects crc-simd.cpp. That file exists up to cryptopp 8.8.0.
-          # In 8.9.0+, SIMD files were merged into crc.cpp and *-simd.cpp removed.
-          # Prefer 8.2.0 (confirmed present), with fallbacks.
-          for ref in CRYPTOPP_8_2_0 CRYPTOPP_8_8_0 CRYPTOPP_8_7_0; do
-            echo "--- Trying $ref ---"
-            if git fetch --depth 1 origin "$ref" && git reset --hard FETCH_HEAD; then
-              if [ -f crc-simd.cpp ]; then
-                echo "Found crc-simd.cpp at $ref ($(git rev-parse --short HEAD))"
-                ls | grep crc
-                exit 0
-              fi
-              echo "  no crc-simd.cpp at $ref"
-            fi
-          done
-          echo "ERROR: no cryptopp tag found with crc-simd.cpp"
-          exit 1
+          cd externals/cryptopp
+          echo "=== cryptopp .cpp files containing 'crc' ==="
+          ls cryptopp/ | grep -i crc || echo "(none found)"
+          echo "=== CMakeLists crc references ==="
+          grep -i "crc" CMakeLists.txt | head -30 || true
+          # Newer cryptopp renamed crc-simd.cpp -> crc_simd.cpp (and possibly other *-simd -> *_simd)
+          if ls cryptopp/*_simd.cpp >/dev/null 2>&1 && ! ls cryptopp/*-simd.cpp >/dev/null 2>&1; then
+            echo ">>> Detected underscore naming, patching CMakeLists.txt"
+            sed -i 's/-simd\.cpp/_simd.cpp/g' CMakeLists.txt
+          fi
+          echo "=== After patch ==="
+          grep -i "crc" CMakeLists.txt | head -30 || true
 
       - name: Patch build files
         run: |
