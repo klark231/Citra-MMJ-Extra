@@ -31,27 +31,33 @@ jobs:
           mv boost_1_83_0 externals/boost
           test -f externals/boost/boost/version.hpp
 
-      - name: Fix cryptopp filename mismatch
+      - name: Fix cryptopp submodule
         run: |
-          cd externals/cryptopp
-          echo "=== cryptopp .cpp files containing 'crc' ==="
-          ls cryptopp/ | grep -i crc || echo "(none found)"
-          echo "=== CMakeLists crc references ==="
-          grep -i "crc" CMakeLists.txt | head -30 || true
-          # Newer cryptopp renamed crc-simd.cpp -> crc_simd.cpp (and possibly other *-simd -> *_simd)
-          if ls cryptopp/*_simd.cpp >/dev/null 2>&1 && ! ls cryptopp/*-simd.cpp >/dev/null 2>&1; then
-            echo ">>> Detected underscore naming, patching CMakeLists.txt"
-            sed -i 's/-simd\.cpp/_simd.cpp/g' CMakeLists.txt
-          fi
-          echo "=== After patch ==="
-          grep -i "crc" CMakeLists.txt | head -30 || true
+          cd externals/cryptopp/cryptopp
+          git fetch --depth 1 origin master
+          git checkout origin/master
+          echo "cryptopp now at: $(git rev-parse --short HEAD)"
 
       - name: Patch build files
         run: |
+          # --- fmt / dynarmic conflict ---
           sed -i '/^# libfmt/d; /^add_subdirectory(fmt)/d; /^add_library(fmt::fmt ALIAS fmt)/d' externals/CMakeLists.txt
           sed -i '1i add_subdirectory(fmt)' externals/CMakeLists.txt
           echo "# disabled in CI" > externals/dynarmic/externals/fmt/CMakeLists.txt
+
+          # Disable dynarmic's install/export (fmt isn't in its export set)
+          sed -i 's/^install(EXPORT/##install(EXPORT/' externals/dynarmic/CMakeLists.txt
+          sed -i 's/^install(TARGETS dynarmic/##install(TARGETS dynarmic/' externals/dynarmic/CMakeLists.txt
+
+          # --- SoundTouch include path fix ---
+          sed -i 's|target_include_directories(SoundTouch INTERFACE \(.*\))|target_include_directories(SoundTouch INTERFACE $<BUILD_INTERFACE:\1>)|' externals/soundtouch/CMakeLists.txt
+
+          # --- sanity check ---
           head -5 externals/CMakeLists.txt
+          echo "--- dynarmic install lines ---"
+          grep -n '^##install\|^install' externals/dynarmic/CMakeLists.txt | head -10
+          echo "--- soundtouch include line ---"
+          grep -n 'target_include_directories' externals/soundtouch/CMakeLists.txt
 
       - name: Read Gradle version
         run: |
