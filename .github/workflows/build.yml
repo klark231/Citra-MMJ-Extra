@@ -8,22 +8,27 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
+      - name: Fetch dependencies
+        run: |
+          bash fetch-deps.sh
+          for d in externals/boost externals/cubeb externals/enet externals/dynarmic externals/teakra; do
+            [ -d "$d/.git" ] && git -C "$d" submodule update --init --recursive --depth 1 || true
+          done
+          ls externals
+
       - name: Read Gradle version
         run: |
           V=$(grep distributionUrl src/android/gradle/wrapper/gradle-wrapper.properties | sed -E 's/.*gradle-([0-9.]+)-.*/\1/')
           echo "GRADLE_VERSION=$V" >> "$GITHUB_ENV"
-          echo "Using Gradle $V"
 
       - uses: gradle/actions/setup-gradle@v4
         with:
@@ -37,7 +42,7 @@ jobs:
 
       - name: Build release APK
         working-directory: src/android
-        run: gradle assembleRelease --no-daemon --stacktrace
+        run: gradle assembleRelease --no-daemon --stacktrace 2>&1 | tee ../../build.log
 
       - name: Sign APK (throwaway CI key)
         run: |
@@ -55,3 +60,9 @@ jobs:
         with:
           name: apk
           path: out/*.apk
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-log
+          path: build.log
