@@ -11,6 +11,9 @@ jobs:
     timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
 
       - uses: actions/setup-java@v4
         with:
@@ -27,6 +30,15 @@ jobs:
           curl -fL https://archives.boost.io/release/1.83.0/source/boost_1_83_0.tar.gz | tar xz
           mv boost_1_83_0 externals/boost
           test -f externals/boost/boost/version.hpp
+
+      - name: Fix cryptopp submodule
+        run: |
+          cd externals/cryptopp/cryptopp
+          git fetch --depth 1 origin master
+          git checkout origin/master
+          test -f crc-simd.cpp
+          echo "cryptopp now at: $(git rev-parse --short HEAD)"
+          ls | grep crc
 
       - name: Patch build files
         run: |
@@ -61,6 +73,7 @@ jobs:
           gradle assembleRelease --no-daemon 2>&1 | tee ../../build.log
 
       - name: Sign APK (throwaway CI key)
+        if: success()
         run: |
           keytool -genkeypair -keystore ci.jks -alias ci -keyalg RSA -keysize 2048 \
             -validity 10000 -storepass android -keypass android -dname "CN=CI"
@@ -73,6 +86,7 @@ jobs:
           ls -la out
 
       - uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: apk
           path: out/*.apk
