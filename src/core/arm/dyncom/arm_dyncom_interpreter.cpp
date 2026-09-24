@@ -3871,7 +3871,7 @@ SUB_INST : {
 SWI_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         swi_inst* const inst_cream = (swi_inst*)inst_base->component;
-        num_instrs = std::max(num_instrs, Settings::values.core_ticks_hack);
+        num_instrs = std::max(num_instrs, static_cast<unsigned int>(Settings::values.core_ticks_hack));
         timer->AddTicks(num_instrs);
         cpu->NumInstrsToExecute =
             num_instrs >= cpu->NumInstrsToExecute ? 0 : cpu->NumInstrsToExecute - num_instrs;
