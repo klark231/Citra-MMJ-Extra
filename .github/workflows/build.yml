@@ -34,18 +34,29 @@ jobs:
       - name: Fix cryptopp submodule
         run: |
           cd externals/cryptopp/cryptopp
-          git fetch --depth 1 origin master
-          git checkout origin/master
-          test -f crc-simd.cpp
-          echo "cryptopp now at: $(git rev-parse --short HEAD)"
-          ls | grep crc
+          echo "=== Before: $(git rev-parse --short HEAD) ==="
+          ls | grep -i crc || echo "(no crc files yet)"
+          # Citra MMJ expects crc-simd.cpp. That file exists up to cryptopp 8.8.0.
+          # In 8.9.0+, SIMD files were merged into crc.cpp and *-simd.cpp removed.
+          # Prefer 8.2.0 (confirmed present), with fallbacks.
+          for ref in CRYPTOPP_8_2_0 CRYPTOPP_8_8_0 CRYPTOPP_8_7_0; do
+            echo "--- Trying $ref ---"
+            if git fetch --depth 1 origin "$ref" && git reset --hard FETCH_HEAD; then
+              if [ -f crc-simd.cpp ]; then
+                echo "Found crc-simd.cpp at $ref ($(git rev-parse --short HEAD))"
+                ls | grep crc
+                exit 0
+              fi
+              echo "  no crc-simd.cpp at $ref"
+            fi
+          done
+          echo "ERROR: no cryptopp tag found with crc-simd.cpp"
+          exit 1
 
       - name: Patch build files
         run: |
-          # Add Citra's fmt before dynarmic, drop the old alias line
           sed -i '/^# libfmt/d; /^add_subdirectory(fmt)/d; /^add_library(fmt::fmt ALIAS fmt)/d' externals/CMakeLists.txt
           sed -i '1i add_subdirectory(fmt)' externals/CMakeLists.txt
-          # Stop dynarmic from defining a second fmt target
           echo "# disabled in CI" > externals/dynarmic/externals/fmt/CMakeLists.txt
           head -5 externals/CMakeLists.txt
 
