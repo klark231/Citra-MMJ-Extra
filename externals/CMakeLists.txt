@@ -60,7 +60,7 @@ add_subdirectory(minilzo)
 # SoundTouch
 add_subdirectory(soundtouch)
 # The SoundTouch target doesn't export the necessary include paths as properties by default
-target_include_directories(SoundTouch INTERFACE ./soundtouch/include)
+target_include_directories(SoundTouch INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/soundtouch/include>)
 
 # Teakra
 add_subdirectory(teakra)
