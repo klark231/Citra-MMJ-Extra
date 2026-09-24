@@ -20,9 +20,14 @@ jobs:
       - name: Fetch dependencies
         run: |
           bash fetch-deps.sh
-          for d in externals/boost externals/cubeb externals/enet externals/dynarmic externals/teakra; do
+          for d in externals/cubeb externals/enet externals/dynarmic externals/teakra; do
             [ -d "$d/.git" ] && git -C "$d" submodule update --init --recursive --depth 1 || true
           done
+          # Replace the boost superproject with a real release (has boost/version.hpp)
+          rm -rf externals/boost
+          curl -fL https://archives.boost.io/release/1.83.0/source/boost_1_83_0.tar.gz | tar xz
+          mv boost_1_83_0 externals/boost
+          test -f externals/boost/boost/version.hpp
           ls externals
 
       - name: Read Gradle version
@@ -42,7 +47,9 @@ jobs:
 
       - name: Build release APK
         working-directory: src/android
-        run: gradle assembleRelease --no-daemon --stacktrace 2>&1 | tee ../../build.log
+        run: |
+          set -o pipefail
+          gradle assembleRelease --no-daemon 2>&1 | tee ../../build.log
 
       - name: Sign APK (throwaway CI key)
         run: |
@@ -60,6 +67,7 @@ jobs:
         with:
           name: apk
           path: out/*.apk
+          if-no-files-found: error
 
       - uses: actions/upload-artifact@v4
         if: always()
