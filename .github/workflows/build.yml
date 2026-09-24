@@ -37,9 +37,20 @@ jobs:
           git fetch --depth 1 origin master
           git checkout origin/master
           echo "cryptopp now at: $(git rev-parse --short HEAD)"
+          ls | grep -i crc
 
       - name: Patch build files
         run: |
+          # --- cryptopp naming: newer master uses crc_simd.cpp, CMakeLists expects crc-simd.cpp ---
+          cd externals/cryptopp
+          if ls cryptopp/*_simd.cpp >/dev/null 2>&1 && ! ls cryptopp/*-simd.cpp >/dev/null 2>&1; then
+            echo ">>> Detected underscore naming, patching cryptopp CMakeLists.txt"
+            sed -i 's/-simd\.cpp/_simd.cpp/g' CMakeLists.txt
+          fi
+          echo "--- cryptopp crc refs ---"
+          grep -i "crc" CMakeLists.txt | head -10
+          cd ../..
+
           # --- fmt / dynarmic conflict ---
           sed -i '/^# libfmt/d; /^add_subdirectory(fmt)/d; /^add_library(fmt::fmt ALIAS fmt)/d' externals/CMakeLists.txt
           sed -i '1i add_subdirectory(fmt)' externals/CMakeLists.txt
